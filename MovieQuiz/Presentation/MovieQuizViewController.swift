@@ -72,6 +72,9 @@ final class MovieQuizViewController: UIViewController {
         currentQuestionIndex = 0
         correctAnswers = 0
         
+        textLabel.font = UIFont(name: "YSDisplay-Medium", size: 12)
+                counterLabel.font = UIFont(name: "YSDisplay-Medium", size: 12)
+        
         let firstQuestion = questions[currentQuestionIndex]
         let viewModel = convert(model: firstQuestion)
         show(quiz: viewModel)
@@ -161,9 +164,6 @@ final class MovieQuizViewController: UIViewController {
         let preparedImage = convert(model: currentQuestion)
         show(quiz: preparedImage)*/
     
-    
-    
-        /*return questionStep*/
     /*let alert = UIAlertController(
                 title: "Этот раунд окончен!",
                 message: "Ваш результат: \(answerText)",
