@@ -71,9 +71,10 @@ final class MovieQuizViewController: UIViewController {
         
         currentQuestionIndex = 0
         correctAnswers = 0
+    
+        textLabel.font = UIFont(name: "YSDisplay-Medium", size: 23)
+        counterLabel.font = UIFont(name: "YSDisplay-Bold", size: 20)
         
-        textLabel.font = UIFont(name: "YSDisplay-Medium", size: 12)
-                counterLabel.font = UIFont(name: "YSDisplay-Medium", size: 12)
         
         let firstQuestion = questions[currentQuestionIndex]
         let viewModel = convert(model: firstQuestion)
@@ -87,12 +88,17 @@ final class MovieQuizViewController: UIViewController {
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = false
         
+        sender.titleLabel?.font = UIFont(name: "YSDisplay-Medium", size: 20)
+
+        
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = true
+        
+        sender.titleLabel?.font = UIFont(name: "YSDisplay-Medium", size: 20)
         
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
@@ -120,6 +126,8 @@ final class MovieQuizViewController: UIViewController {
                 buttonText: "Сыграть ещё раз")
             show(quiz: viewModel)
         } else {
+            imageView.layer.borderColor = UIColor.clear.cgColor
+            
             currentQuestionIndex += 1
             let nextQuestion = questions[currentQuestionIndex]
             let viewModel = convert(model: nextQuestion)
@@ -133,6 +141,7 @@ final class MovieQuizViewController: UIViewController {
         }
         let answerText = isCorrect ? "ДА" : "НЕТ"
         
+        imageView.layer.cornerRadius = 20
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor: UIColor.ypRed.cgColor
