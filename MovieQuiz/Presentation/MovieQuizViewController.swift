@@ -67,7 +67,8 @@ final class MovieQuizViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        imageView.layer.cornerRadius = 6
+        imageView.layer.cornerRadius = 20
+        imageView.layer.masksToBounds = true
         
         currentQuestionIndex = 0
         correctAnswers = 0
@@ -88,7 +89,7 @@ final class MovieQuizViewController: UIViewController {
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = false
         
-        sender.titleLabel?.font = UIFont(name: "YSDisplay-Medium", size: 20)
+        sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
 
         
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
@@ -98,7 +99,7 @@ final class MovieQuizViewController: UIViewController {
         let currentQuestion = questions[currentQuestionIndex]
         let givenAnswer = true
         
-        sender.titleLabel?.font = UIFont(name: "YSDisplay-Medium", size: 20)
+        sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
         
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
     }
@@ -109,6 +110,9 @@ final class MovieQuizViewController: UIViewController {
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
+        
+        imageView.layer.cornerRadius = 20
+           imageView.layer.masksToBounds = true
     }
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
         let questionStep = QuizStepViewModel(
@@ -157,17 +161,35 @@ final class MovieQuizViewController: UIViewController {
             preferredStyle: .alert)
         
         let action = UIAlertAction(title: result.buttonText, style: .default) { _ in
-            self.currentQuestionIndex = 0
+            self.resetGame()
+            
+            /*self.currentQuestionIndex = 0
             self.correctAnswers = 0
             let firstQuestion = self.questions[self.currentQuestionIndex]
             let viewModel = self.convert(model: firstQuestion)
-            self.show(quiz: viewModel)
+            self.show(quiz: viewModel)*/
         }
         alert.addAction(action)
         
         self.present(alert, animated: true, completion: nil)
     }
-            
+    private func resetGame() {
+        currentQuestionIndex = 0
+        correctAnswers = 0
+        
+        imageView.layer.borderColor = UIColor.clear.cgColor
+        configureImageView()
+        
+        let firstQuestion = questions[currentQuestionIndex]
+        let viewModel = convert(model: firstQuestion)
+        show(quiz: viewModel)
+    }
+        private func configureImageView() {
+               imageView.layer.cornerRadius = 20
+               imageView.layer.masksToBounds = true
+               imageView.layer.borderWidth = 8
+               imageView.layer.borderColor = UIColor.clear.cgColor
+    }
             
         /*let currentQuestion = questions[currentQuestionIndex]
         let preparedImage = convert(model: currentQuestion)
