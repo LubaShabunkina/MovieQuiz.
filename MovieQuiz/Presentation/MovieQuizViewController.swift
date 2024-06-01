@@ -19,6 +19,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("viewDidLoad called")
         
         let questionFactory = QuestionFactory()
         questionFactory.delegate = self
@@ -26,9 +27,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         /* questionFactory = QuestionFactory(delegate: self)*/
         
-        questionFactory.requestNextQuestion()
-    
-        
+        self.questionFactory?.requestNextQuestion()
+        print("requestNextQuestion called")
         
         imageView.layer.cornerRadius = 20
         imageView.layer.masksToBounds = true
@@ -38,8 +38,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
         textLabel.font = UIFont(name: "YSDisplay-Medium", size: 23)
         counterLabel.font = UIFont(name: "YSDisplay-Bold", size: 20)
-        
-        
         
     }
     // MARK: - QuestionFactoryDelegate
@@ -84,14 +82,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     //MARK: -Private functions
     
     private func show(quiz step: QuizStepViewModel) {
+        print("show(quiz:) called with step: \(step)")
         imageView.image = step.image
         textLabel.text = step.question
         counterLabel.text = step.questionNumber
         
         imageView.layer.cornerRadius = 20
-           imageView.layer.masksToBounds = true
+        imageView.layer.masksToBounds = true
     }
     private func convert(model: QuizQuestion) -> QuizStepViewModel {
+        print("convert(model:) called with model: \(model)")
         let questionStep = QuizStepViewModel(
             image: UIImage(named: model.image) ?? UIImage(),
             question: model.text,
@@ -110,10 +110,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             imageView.layer.borderColor = UIColor.clear.cgColor
             
             currentQuestionIndex += 1
-            questionFactory?.requestNextQuestion()
+            self.questionFactory?.requestNextQuestion()
         }
     }
     private func showAnswerResult(isCorrect: Bool) {
+        print("showAnswerResult called with isCorrect: \(isCorrect)")
         if isCorrect {
             correctAnswers += 1
         }
@@ -130,6 +131,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
     }
     private func show(quiz result: QuizResultsViewModel) {
+        print("show(quiz result:) called with result: \(result)")
         let alert = UIAlertController(
             title: result.title,
             message: result.text,
@@ -150,6 +152,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         self.present(alert, animated: true, completion: nil)
     }
     private func resetGame() {
+        print("resetGame called")
         currentQuestionIndex = 0
         correctAnswers = 0
         
@@ -160,6 +163,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     }
         private func configureImageView() {
+            print("configureImageView called")
                imageView.layer.cornerRadius = 20
                imageView.layer.masksToBounds = true
                imageView.layer.borderWidth = 8

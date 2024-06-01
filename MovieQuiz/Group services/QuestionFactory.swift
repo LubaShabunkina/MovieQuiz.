@@ -43,15 +43,18 @@ class QuestionFactory: QuestionFactoryProtocol {
                      text: "Рейтинг этого фильма больше чем 6?",
                      correctAnswer: false)
     ]
+    weak var delegate: QuestionFactoryDelegate?
     
-    func requestNextQuestion() -> QuizQuestion? {
+    func requestNextQuestion() /*-> QuizQuestion?*/ {
         
         guard let index = (0..<questions.count).randomElement() else {
             delegate?.didReceiveNextQuestion(question: nil)
-            return
-        }
+           return
+            
+            }
         
         let question = questions[safe: index]
+        print("requestNextQuestion called, index: \(index), question: \(String(describing: question))")
         delegate?.didReceiveNextQuestion(question: question)
     }
     
@@ -62,6 +65,6 @@ class QuestionFactory: QuestionFactoryProtocol {
             
         }
     }*/
-    weak var delegate: QuestionFactoryDelegate?
+    
 }
 
