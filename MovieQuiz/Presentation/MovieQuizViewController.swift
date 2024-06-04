@@ -17,12 +17,16 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     private var alertPresenter: AlertPresenter? // Презентер для отображения алертов
     
-    
+    private var statisticService: StatisticServiceProtocol!
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
         super.viewDidLoad()
         print("viewDidLoad called")
+        
+        // Инициализация statisticService
+        let statistcService = StatistcService()
+        self.statisticService = statistcService
         
         // Создание фабрики вопросов и установки делегата
         let questionFactory = QuestionFactory()
@@ -31,8 +35,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         // Создание презентера алертов
         self.alertPresenter = AlertPresenter(viewController: self)
-        
-        /* questionFactory = QuestionFactory(delegate: self)*/
         
         // Запрос следующего вопроса
         self.questionFactory?.requestNextQuestion()
@@ -45,7 +47,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         currentQuestionIndex = 0
         correctAnswers = 0
-    
+        
         textLabel.font = UIFont(name: "YSDisplay-Medium", size: 23)
         counterLabel.font = UIFont(name: "YSDisplay-Bold", size: 20)
         
@@ -108,26 +110,49 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)"
         )
         return questionStep
-    } 
+    }
+    
+    private func changeStateButton(isEnabled: Bool) {
+       // noButton.isEnabled = isEnabled
+       // yesButton.isEnabled = isEnabled
+    }
+    
+    
     private func showNextQuestionOrResults() {
+        print("showNextQuestionOrResults called")
+        
+        guard let statisticService = statisticService else {
+            print("Error: statisticService is nil")
+            return
+        }
+        
         // Проверка, завершены ли все вопросы
         if currentQuestionIndex == questionsAmount - 1 {
-            let text = "Ваш результат: \(correctAnswers)/10"
+            statisticService.store(correct: correctAnswers, total: questionsAmount)
+            let bestGame = statisticService.bestGame
+            let text = """
+            Ваш результат: \(correctAnswers)/\(questionsAmount)
+            Количество сыгранных квизов: \(statisticService.gamesCount)
+            Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date))
+            Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
+"""
+            
             let alertModel = AlertModel(
                 title: "Этот раунд окончен!",
                 message: text,
                 buttonText: "Сыграть ещё раз",
-                completion: {[weak self] in
+                completion: { [weak self] in
                     self?.resetGame()
                 }
-                )
+            )
             alertPresenter?.showAlert(model: alertModel)
         } else {
             //Запрос следующего вопроса
             imageView.layer.borderColor = UIColor.clear.cgColor
             
             currentQuestionIndex += 1
-            questionFactory?.requestNextQuestion()
+            self.questionFactory?.requestNextQuestion()
+            print("requestNextQuestion called")
         }
     }
     
@@ -136,7 +161,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         if isCorrect {
             correctAnswers += 1
         }
-        /*let answerText = isCorrect ? "ДА" : "НЕТ"*/
+        let answerText = isCorrect ? "ДА" : "НЕТ"
         
         imageView.layer.cornerRadius = 20
         imageView.layer.masksToBounds = true
@@ -145,33 +170,24 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         //Задержка перед показом следующего вопроса или результатов
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            //guard let strongSelf = self else { return }
-            self?.showNextQuestionOrResults() //strongSelf.showNextQuestionOrResults()
+            guard let strongSelf = self else { return }
+            strongSelf.showNextQuestionOrResults()
+            
+            self?.changeStateButton(isEnabled: true)
         }
     }
-   /* private func show(quiz result: QuizResultsViewModel) { //Он отвечает за отображение алерта с результатами квиза после прохождения всех вопросов.
-
+    private func show(quiz result: QuizResultsViewModel) { //Он отвечает за отображение алерта с результатами квиза после прохождения всех вопросов.
+        
         print("show(quiz result:) called with result: \(result)")
-        let alert = UIAlertController(
+        let alertModel = AlertModel(
             title: result.title,
             message: result.text,
-            preferredStyle: .alert)
-        
-        let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            guard let strongSelf = self else { return }
-            strongSelf.resetGame()
-        
-            /*self.currentQuestionIndex = 0
-            self.correctAnswers = 0
-            let firstQuestion = self.questions[self.currentQuestionIndex]
-            let viewModel = self.convert(model: firstQuestion)
-            self.show(quiz: viewModel)*/
+            buttonText: result.buttonText
+        ) { [weak self] in
+            self?.resetGame()
         }
-        alert.addAction(action)
-        
-        self.present(alert, animated: true, completion: nil)
-    } */
-    
+        alertPresenter?.showAlert(model: alertModel)
+    }
     private func resetGame() {
         //Cброс состояния игры
         print("resetGame called")
@@ -184,92 +200,106 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         // Запрос следующего вопроса
         questionFactory?.requestNextQuestion()
     }
-        private func configureImageView() {
-            print("configureImageView called")
-               imageView.layer.cornerRadius = 20
-               imageView.layer.masksToBounds = true
-               imageView.layer.borderWidth = 8
-               imageView.layer.borderColor = UIColor.clear.cgColor
+    private func configureImageView() {
+        print("configureImageView called")
+        imageView.layer.cornerRadius = 20
+        imageView.layer.masksToBounds = true
+        imageView.layer.borderWidth = 8
+        imageView.layer.borderColor = UIColor.clear.cgColor
     }
-            
-        /*let currentQuestion = questions[currentQuestionIndex]
-        let preparedImage = convert(model: currentQuestion)
-        show(quiz: preparedImage)*/
+    
+    /* let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
+     guard let strongSelf = self else { return }
+     strongSelf.resetGame()
+     
+     self.currentQuestionIndex = 0
+     self.correctAnswers = 0
+     let firstQuestion = self.questions[self.currentQuestionIndex]
+     let viewModel = self.convert(model: firstQuestion)
+     self.show(quiz: viewModel)
+     }
+     alert.addAction(action)
+     
+     self.present(alert, animated: true, completion: nil)
+     }
+     let currentQuestion = questions[currentQuestionIndex]
+     let preparedImage = convert(model: currentQuestion)
+     show(quiz: preparedImage)*/
     
     /*let alert = UIAlertController(
-                title: "Этот раунд окончен!",
-                message: "Ваш результат: \(answerText)",
-                preferredStyle: .alert)
-            */
-        
+     title: "Этот раунд окончен!",
+     message: "Ваш результат: \(answerText)",
+     preferredStyle: .alert)
+     */
+    
     //MARK: - Отображение
     
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var counterLabel: UILabel!
     @IBOutlet private var textLabel: UILabel!
 }
-    
 
-    /*
-     Mock-данные
-     
-     Картинка: The Godfather
-     Настоящий рейтинг: 9,2
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: ДА
-     
-     
-     Картинка: The Dark Knight
-     Настоящий рейтинг: 9
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: ДА
-     
-     
-     Картинка: Kill Bill
-     Настоящий рейтинг: 8,1
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: ДА
-     
-     
-     Картинка: The Avengers
-     Настоящий рейтинг: 8
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: ДА
-     
-     
-     Картинка: Deadpool
-     Настоящий рейтинг: 8
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: ДА
-     
-     
-     Картинка: The Green Knight
-     Настоящий рейтинг: 6,6
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: ДА
-     
-     
-     Картинка: Old
-     Настоящий рейтинг: 5,8
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: НЕТ
-     
-     
-     Картинка: The Ice Age Adventures of Buck Wild
-     Настоящий рейтинг: 4,3
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: НЕТ
-     
-     
-     Картинка: Tesla
-     Настоящий рейтинг: 5,1
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: НЕТ
-     
-     
-     Картинка: Vivarium
-     Настоящий рейтинг: 5,8
-     Вопрос: Рейтинг этого фильма больше чем 6?
-     Ответ: НЕТ
-     */
+
+/*
+ Mock-данные
+ 
+ Картинка: The Godfather
+ Настоящий рейтинг: 9,2
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: The Dark Knight
+ Настоящий рейтинг: 9
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: Kill Bill
+ Настоящий рейтинг: 8,1
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: The Avengers
+ Настоящий рейтинг: 8
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: Deadpool
+ Настоящий рейтинг: 8
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: The Green Knight
+ Настоящий рейтинг: 6,6
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: ДА
+ 
+ 
+ Картинка: Old
+ Настоящий рейтинг: 5,8
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: НЕТ
+ 
+ 
+ Картинка: The Ice Age Adventures of Buck Wild
+ Настоящий рейтинг: 4,3
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: НЕТ
+ 
+ 
+ Картинка: Tesla
+ Настоящий рейтинг: 5,1
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: НЕТ
+ 
+ 
+ Картинка: Vivarium
+ Настоящий рейтинг: 5,8
+ Вопрос: Рейтинг этого фильма больше чем 6?
+ Ответ: НЕТ
+ */
 
