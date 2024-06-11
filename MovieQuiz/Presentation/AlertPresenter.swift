@@ -9,7 +9,7 @@ import Foundation
 import UIKit
 
 // Класс для отображения алертов
-class AlertPresenter {
+final class AlertPresenter {
     private weak var viewController: UIViewController?// Ссылка на контроллер, на котором будет отображаться алерт
     
     //Инициализация с указанием контроллера

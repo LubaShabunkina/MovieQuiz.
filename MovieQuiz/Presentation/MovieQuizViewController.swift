@@ -18,6 +18,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var alertPresenter: AlertPresenter? // Презентер для отображения алертов
     
     private var statisticService: StatisticServiceProtocol!
+
+    
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -25,8 +27,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         print("viewDidLoad called")
         
         // Инициализация statisticService
-        let statistcService = StatistcService()
-        self.statisticService = statistcService
+        let statisticService = StatisticService()
+        self.statisticService = statisticService
         
         // Создание фабрики вопросов и установки делегата
         let questionFactory = QuestionFactory()
@@ -50,8 +52,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         
         textLabel.font = UIFont(name: "YSDisplay-Medium", size: 23)
         counterLabel.font = UIFont(name: "YSDisplay-Bold", size: 20)
-        
+        yesButton.titleLabel?.font = UIFont(name: "YSDisplay-Medium", size: 20)
+        noButton.titleLabel?.font = UIFont(name: "YSDisplay-Medium", size: 20)
     }
+    
     // MARK: - QuestionFactoryDelegate
     
     func didReceiveNextQuestion(question: QuizQuestion?){
@@ -161,8 +165,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         if isCorrect {
             correctAnswers += 1
         }
-        let answerText = isCorrect ? "ДА" : "НЕТ"
-        
+        /*let answerText = isCorrect ? "ДА" : "НЕТ" */
         imageView.layer.cornerRadius = 20
         imageView.layer.masksToBounds = true
         imageView.layer.borderWidth = 8
@@ -226,17 +229,15 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
      let preparedImage = convert(model: currentQuestion)
      show(quiz: preparedImage)*/
     
-    /*let alert = UIAlertController(
-     title: "Этот раунд окончен!",
-     message: "Ваш результат: \(answerText)",
-     preferredStyle: .alert)
-     */
-    
     //MARK: - Отображение
     
     @IBOutlet private var imageView: UIImageView!
     @IBOutlet private var counterLabel: UILabel!
     @IBOutlet private var textLabel: UILabel!
+    
+    @IBOutlet private var noButton: UIButton!
+    @IBOutlet private var yesButton: UIButton!
+    
 }
 
 

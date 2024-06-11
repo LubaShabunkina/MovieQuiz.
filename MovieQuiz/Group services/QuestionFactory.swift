@@ -7,7 +7,7 @@
 
 import Foundation
 
-class QuestionFactory: QuestionFactoryProtocol {
+final class QuestionFactory: QuestionFactoryProtocol {
     
     private let questions: [QuizQuestion] = [
         
@@ -57,14 +57,5 @@ class QuestionFactory: QuestionFactoryProtocol {
         print("requestNextQuestion called, index: \(index), question: \(String(describing: question))")
         delegate?.didReceiveNextQuestion(question: question)
     }
-    
-    /*subscript(index: Int) -> Int {
-        get {
-        }
-        set(newValue) {
-            
-        }
-    }*/
-    
 }
 
