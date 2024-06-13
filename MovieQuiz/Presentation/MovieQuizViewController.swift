@@ -18,7 +18,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     private var alertPresenter: AlertPresenter? // Презентер для отображения алертов
     
     private var statisticService: StatisticServiceProtocol!
-
+    
     
     // MARK: - Lifecycle
     
@@ -117,8 +117,8 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
     private func changeStateButton(_ isEnabled: Bool) {
-       noButton.isEnabled = isEnabled
-       yesButton.isEnabled = isEnabled
+        noButton.isEnabled = isEnabled
+        yesButton.isEnabled = isEnabled
     }
     
     
@@ -134,10 +134,11 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         if currentQuestionIndex == questionsAmount - 1 {
             statisticService.store(correct: correctAnswers, total: questionsAmount)
             let bestGame = statisticService.bestGame
+            let dateText = formatDate(bestGame.date)
             let text = """
 Ваш результат: \(correctAnswers)/\(questionsAmount)
 Количество сыгранных квизов: \(statisticService.gamesCount)
-Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date))
+Рекорд: \(bestGame.correct)/\(bestGame.total) (\(dateText))
 Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
 """
             
