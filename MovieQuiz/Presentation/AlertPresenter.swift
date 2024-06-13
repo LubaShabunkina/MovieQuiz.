@@ -8,8 +8,13 @@
 import Foundation
 import UIKit
 
+//Протокол для отображения алертов
+protocol AlertPresenterProtocol {
+    func showAlert(model: AlertModel)
+}
+
 // Класс для отображения алертов
-final class AlertPresenter {
+final class AlertPresenter: AlertPresenterProtocol {
     private weak var viewController: UIViewController?// Ссылка на контроллер, на котором будет отображаться алерт
     
     //Инициализация с указанием контроллера

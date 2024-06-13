@@ -15,10 +15,33 @@ final class StatisticService {
         case correct
         case bestGame
         case gamesCount
+        case totalCorrectAnswers
+        case totalQuestions
+        case bestGameCorrect
+        case bestGameTotal
+        case bestGameDate
     }
 }
 
 extension StatisticService: StatisticServiceProtocol {
+    func store(correct count: Int, total amount: Int) {
+        // Обновление общего количества правильных ответов и общего количества вопросов
+        let totalCorrectAnswers = storage.integer(forKey: Keys.correct.rawValue)
+        let totalQuestions = storage.integer(forKey: Keys.totalQuestions.rawValue)
+        
+        storage.set(totalCorrectAnswers + count, forKey: Keys.correct.rawValue)
+        storage.set(totalQuestions + amount, forKey: Keys.totalQuestions.rawValue)
+        
+        // Обновление количества сыгранных игр
+        gamesCount += 1
+        
+        // Обновление лучшей игры, если текущая игра была лучше
+        let currentBestGame = bestGame
+        if count > currentBestGame.correct || (count == currentBestGame.correct && amount < currentBestGame.total) {
+            let newBestGame = GameResult(correct: count, total: amount, date: Date())
+            bestGame = newBestGame
+        }
+    }
     
     var gamesCount: Int {
         get {
@@ -26,15 +49,11 @@ extension StatisticService: StatisticServiceProtocol {
             return UserDefaults.standard.integer(forKey: "gamesCount")
         }
         //Запись значения newValue в UserDefaults по ключу "gamesCount"
-        set { UserDefaults.standard.set(newValue, forKey: "gamesCount")
-            
-        }
+        set { UserDefaults.standard.set(newValue, forKey: "gamesCount") }
     }
-    
     
     var bestGame: GameResult {
         get {
-            
             // Чтение значения correct из UserDefaults по ключу "bestGameCorrect"
             let correct = storage.integer(forKey: "bestGameCorrect")
             
@@ -59,24 +78,12 @@ extension StatisticService: StatisticServiceProtocol {
     }
     
     var totalAccuracy: Double {
-        
         get {
-            
             let totalCorrectAnswers = storage.integer(forKey: "totalCorrectAnswers")
             let totalQuestions = storage.integer(forKey: "totalQuestions")
             
             guard totalQuestions != 0 else { return 0.0 }
-            
-            return(Double(totalCorrectAnswers) / Double(totalQuestions)) * 100
+            return (Double(totalCorrectAnswers) / Double(totalQuestions)) * 100
         }
     }
-    func store(correct count: Int, total amount: Int) {
-        
-        let totalCorrectAnswers = storage.integer(forKey: "totalCorrectAnswers")
-        let totalQuestions = storage.integer(forKey: "totalQuestions")
-        
-        storage.set(totalCorrectAnswers + count, forKey: "totalCorrectAnswers")
-        storage.set(totalQuestions + amount, forKey: "totalQuestions")
-    }
 }
-

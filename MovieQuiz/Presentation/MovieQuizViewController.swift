@@ -116,9 +116,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         return questionStep
     }
     
-    private func changeStateButton(isEnabled: Bool) {
-       // noButton.isEnabled = isEnabled
-       // yesButton.isEnabled = isEnabled
+    private func changeStateButton(_ isEnabled: Bool) {
+       noButton.isEnabled = isEnabled
+       yesButton.isEnabled = isEnabled
     }
     
     
@@ -135,10 +135,10 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             statisticService.store(correct: correctAnswers, total: questionsAmount)
             let bestGame = statisticService.bestGame
             let text = """
-            Ваш результат: \(correctAnswers)/\(questionsAmount)
-            Количество сыгранных квизов: \(statisticService.gamesCount)
-            Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date))
-            Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
+Ваш результат: \(correctAnswers)/\(questionsAmount)
+Количество сыгранных квизов: \(statisticService.gamesCount)
+Рекорд: \(bestGame.correct)/\(bestGame.total) (\(bestGame.date))
+Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%
 """
             
             let alertModel = AlertModel(
@@ -176,7 +176,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
             guard let strongSelf = self else { return }
             strongSelf.showNextQuestionOrResults()
             
-            self?.changeStateButton(isEnabled: true)
+            self?.changeStateButton(true)
         }
     }
     private func show(quiz result: QuizResultsViewModel) { //Он отвечает за отображение алерта с результатами квиза после прохождения всех вопросов.
@@ -203,6 +203,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         // Запрос следующего вопроса
         questionFactory?.requestNextQuestion()
     }
+    
+    private func formatDate(_ date: Date) -> String {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "dd.MM.yy HH:mm"
+        return dateFormatter.string(from: date)
+    }
+    
     private func configureImageView() {
         print("configureImageView called")
         imageView.layer.cornerRadius = 20
