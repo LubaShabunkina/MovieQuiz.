@@ -107,11 +107,16 @@
                                     </stackView>
                                 </subviews>
                             </stackView>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" style="medium" translatesAutoresizingMaskIntoConstraints="NO" id="uhx-AM-hUd">
+                                <rect key="frame" x="197" y="438" width="20" height="20"/>
+                            </activityIndicatorView>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="6Tk-OE-BBY"/>
                         <color key="backgroundColor" name="YP Black"/>
                         <constraints>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="Vj9-u0-tOL" secondAttribute="trailing" constant="20" id="1II-7J-dLe"/>
+                            <constraint firstItem="uhx-AM-hUd" firstAttribute="centerY" secondItem="8bC-Xf-vdC" secondAttribute="centerY" id="KdE-BG-gg5"/>
+                            <constraint firstItem="uhx-AM-hUd" firstAttribute="centerX" secondItem="8bC-Xf-vdC" secondAttribute="centerX" id="NNC-TP-lCh"/>
                             <constraint firstItem="Vj9-u0-tOL" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="20" id="beF-th-gic"/>
                             <constraint firstItem="Vj9-u0-tOL" firstAttribute="top" secondItem="6Tk-OE-BBY" secondAttribute="top" constant="10" id="noE-WZ-6dc"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="bottom" secondItem="Vj9-u0-tOL" secondAttribute="bottom" id="qdK-sQ-0pc"/>
@@ -120,6 +125,7 @@
                     <connections>
                         <outlet property="NoButton" destination="PTI-Rf-4fM" id="EH6-bT-0jU"/>
                         <outlet property="YesButton" destination="Tt3-r0-mLh" id="S6v-KM-aXT"/>
+                        <outlet property="activityIndicator" destination="uhx-AM-hUd" id="KqR-6A-zGh"/>
                         <outlet property="counterLabel" destination="sEP-3U-DJi" id="eI4-tM-tkX"/>
                         <outlet property="imageView" destination="8Og-6H-UPt" id="hvA-2c-omZ"/>
                         <outlet property="textLabel" destination="6lQ-qG-Jgo" id="WQx-bp-vlQ"/>
