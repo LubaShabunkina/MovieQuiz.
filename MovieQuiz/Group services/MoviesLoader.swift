@@ -12,7 +12,7 @@ protocol MoviesLoading {
 }
 final class MoviesLoader: MoviesLoading {
     func loadMovies(completion: @escaping (Result<MostPopularMovies, Error>) -> Void) {
-        guard let url = URL(string: "https://tv-api.com/en/API/Top250Movies/k_kiwxbi4y") else {
+        guard let url = URL(string: "https://tv-api.com/en/API/Top250Movies/k_zcuw1ytf") else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))
             return
         }
