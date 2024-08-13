@@ -10,7 +10,18 @@ import Foundation
 protocol MoviesLoading {
     func loadMovies(completion: @escaping (Result<MostPopularMovies, Error>) -> Void)
 }
+
+protocol NetworkRouting {
+    func fetch(url: URL, completion: @escaping (Result<Data, Error>) -> Void)
+}
+
 final class MoviesLoader: MoviesLoading {
+    
+    private let networkClient: NetworkRouting
+    init(networkClient: NetworkRouting) {
+        self.networkClient = networkClient
+    }
+    
     func loadMovies(completion: @escaping (Result<MostPopularMovies, Error>) -> Void) {
         guard let url = URL(string: "https://tv-api.com/en/API/Top250Movies/k_zcuw1ytf") else {
             completion(.failure(NSError(domain: "Invalid URL", code: -1, userInfo: nil)))

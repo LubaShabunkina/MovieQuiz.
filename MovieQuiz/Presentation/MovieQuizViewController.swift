@@ -31,7 +31,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         self.statisticService = statisticService
         
         // Создание фабрики вопросов и установки делегата
-        let questionFactory = QuestionFactory(moviesLoader: MoviesLoader(), delegate: self)
+        let questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: NetworkRouting.self as! NetworkRouting), delegate: self)
         //questionFactory.delegate = self
         self.questionFactory = questionFactory
         
