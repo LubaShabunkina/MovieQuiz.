@@ -31,13 +31,13 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         let statisticService = StatisticService()
         self.statisticService = statisticService
         
-        // Создание фабрики вопросов и установки делегата
+        presenter.viewController = self
         let networkClient = NetworkClient()
         let moviesLoader = MoviesLoader(networkClient: networkClient)
         let questionFactory = QuestionFactory(moviesLoader: moviesLoader, delegate: self)
         self.questionFactory = questionFactory
-
-       // let questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: NetworkRouting.self as! NetworkRouting), delegate: self)
+        
+        // let questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: NetworkRouting.self as! NetworkRouting), delegate: self)
         //questionFactory.delegate = self
         self.questionFactory = questionFactory
         
@@ -74,7 +74,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         guard let url = URL(string: "https://tv-api.com/en/API/MostPopularTVs/k_zcuw1ytf") else { return }
         // создаём запрос
         let request = URLRequest(url: url)
-
+        
         // Создаём задачу на отправление запроса в сеть
         let task: URLSessionDataTask = URLSession.shared.dataTask(with: request) { data, response, error in
         }
@@ -107,28 +107,34 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         print("noButtonClicked called")
-        guard let currentQuestion = currentQuestion else {
+        presenter.currentQuestion = currentQuestion
+        presenter.noButtonClicked(sender)
+        
+        /*guard let currentQuestion = currentQuestion else {
             return
         }
         let givenAnswer = false
         sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
-        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)*/
     }
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         print("yesButtonClicked called")
-        guard let currentQuestion = currentQuestion else {
+        presenter.currentQuestion = currentQuestion
+        presenter.yesButtonClicked(sender)
+    }
+        /*guard let currentQuestion = currentQuestion else {
             return
         }
         let givenAnswer = true
         
         sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
         showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-    }
+    }*/
     
     //MARK: -Private functions
     
-    private func show(quiz step: QuizStepViewModel) {
+        func show(quiz step: QuizStepViewModel) {
         print("show(quiz:) called with step: \(step)")
         imageView.image = step.image
         textLabel.text = step.question
@@ -195,7 +201,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         }
     }
     
-    private func showAnswerResult(isCorrect: Bool) {
+        func showAnswerResult(isCorrect: Bool) {
         print("showAnswerResult called with isCorrect: \(isCorrect)")
         if isCorrect {
             correctAnswers += 1
