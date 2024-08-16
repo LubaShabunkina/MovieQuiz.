@@ -9,6 +9,8 @@ import Foundation
 
 final class QuestionFactory: QuestionFactoryProtocol {
     
+    let networkClient = NetworkClient()
+    
     private let moviesLoader: MoviesLoading
     private weak var delegate: QuestionFactoryDelegate?
     
