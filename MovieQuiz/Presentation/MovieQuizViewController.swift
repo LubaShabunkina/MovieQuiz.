@@ -7,7 +7,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     //private let questionsAmount: Int = 10 // Общее количество вопросов
     
-    private var questionFactory: QuestionFactoryProtocol? // Фабрика вопросов
+     var questionFactory: QuestionFactoryProtocol? // Фабрика вопросов
     
     private var currentQuestion: QuizQuestion? //Текущий вопрос
     
@@ -84,7 +84,9 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     // MARK: - QuestionFactoryDelegate
     
     func didReceiveNextQuestion(question: QuizQuestion?){
-        guard let question = question else { return }
+        presenter.didReceiveNextQuestion(question: question)
+    }
+        /*guard let question = question else { return }
         
         currentQuestion = question
         let viewModel = presenter.convert(model: question)
@@ -92,7 +94,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         DispatchQueue.main.async { [weak self] in
             self?.show(quiz: viewModel)
         }
-    }
+    }*/
     
     func didLoadDataFromServer() {
         activityIndicator.isHidden = true //скрываем индикатор загрузки
@@ -107,7 +109,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     @IBAction private func noButtonClicked(_ sender: UIButton) {
         print("noButtonClicked called")
-        presenter.currentQuestion = currentQuestion
         presenter.noButtonClicked(sender)
         
         /*guard let currentQuestion = currentQuestion else {
@@ -120,7 +121,6 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     
     @IBAction private func yesButtonClicked(_ sender: UIButton) {
         print("yesButtonClicked called")
-        presenter.currentQuestion = currentQuestion
         presenter.yesButtonClicked(sender)
     }
         /*guard let currentQuestion = currentQuestion else {
@@ -202,6 +202,7 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
     }
     
         func showAnswerResult(isCorrect: Bool) {
+            
         print("showAnswerResult called with isCorrect: \(isCorrect)")
         if isCorrect {
             correctAnswers += 1
@@ -213,14 +214,20 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
         imageView.layer.borderColor = isCorrect ? UIColor.ypGreen.cgColor: UIColor.ypRed.cgColor
         
         //Задержка перед показом следующего вопроса или результатов
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+        /*DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let strongSelf = self else { return }
             strongSelf.showNextQuestionOrResults()
             
-            self?.changeStateButton(true)
+            self?.changeStateButton(true)*/
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                        guard let self = self else { return }
+                        self.presenter.correctAnswers = self.correctAnswers
+                        self.presenter.questionFactory = self.questionFactory
+                        self.presenter.showNextQuestionOrResults()
         }
     }
-    private func show(quiz result: QuizResultsViewModel) { //Он отвечает за отображение алерта с результатами квиза после прохождения всех вопросов.
+    func show(quiz result: QuizResultsViewModel) { //Он отвечает за отображение алерта с результатами квиза после прохождения всех вопросов.
         
         print("show(quiz result:) called with result: \(result)")
         let alertModel = AlertModel(
@@ -314,66 +321,4 @@ final class MovieQuizViewController: UIViewController, QuestionFactoryDelegate {
 }
 
 
-/*
- Mock-данные
- 
- Картинка: The Godfather
- Настоящий рейтинг: 9,2
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: ДА
- 
- 
- Картинка: The Dark Knight
- Настоящий рейтинг: 9
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: ДА
- 
- 
- Картинка: Kill Bill
- Настоящий рейтинг: 8,1
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: ДА
- 
- 
- Картинка: The Avengers
- Настоящий рейтинг: 8
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: ДА
- 
- 
- Картинка: Deadpool
- Настоящий рейтинг: 8
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: ДА
- 
- 
- Картинка: The Green Knight
- Настоящий рейтинг: 6,6
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: ДА
- 
- 
- Картинка: Old
- Настоящий рейтинг: 5,8
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: НЕТ
- 
- 
- Картинка: The Ice Age Adventures of Buck Wild
- Настоящий рейтинг: 4,3
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: НЕТ
- 
- 
- Картинка: Tesla
- Настоящий рейтинг: 5,1
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: НЕТ
- 
- 
- Картинка: Vivarium
- Настоящий рейтинг: 5,8
- Вопрос: Рейтинг этого фильма больше чем 6?
- Ответ: НЕТ
- */
 
