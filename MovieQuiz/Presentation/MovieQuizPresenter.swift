@@ -8,89 +8,121 @@
 import Foundation
 import UIKit
 
-final class MovieQuizPresenter {
+final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     var questionFactory: QuestionFactoryProtocol? // Фабрика вопросов
+    private weak var viewController: MovieQuizViewController?
+    
+    init(viewController: MovieQuizViewController) {
+        self.viewController = viewController
+        
+        let networkClient = NetworkClient()
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: networkClient), delegate: self)
+        questionFactory?.loadData()
+        viewController.showLoadingIndicator()
+    }
+    
     let questionsAmount: Int = 10
     var currentQuestionIndex: Int = 0
     var currentQuestion: QuizQuestion?
-    weak var viewController: MovieQuizViewController?
     var correctAnswers: Int = 0
     
-    func convert(model: QuizQuestion) -> QuizStepViewModel {
-        // Конвертация модели вопроса в модель шага квиза
-        print("convert(model:) called with model: \(model)")
-        return QuizStepViewModel(
-            //let questionStep = QuizStepViewModel(
-            image: UIImage(data: model.image) ?? UIImage(),
-            question: model.text,
-            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)"
-        )
-        //return questionStep
+    // MARK: - QuestionFactoryDelegate
+    
+    func didLoadDataFromServer() {
+        viewController?.hideLoadingIndicator()
+        questionFactory?.requestNextQuestion()
     }
     
-    func isLastQuestion() -> Bool {
-        currentQuestionIndex == questionsAmount - 1
+    func didFailToLoadData(with error: Error) {
+        let message = error.localizedDescription
+        viewController?.showNetworkError(message: message)
     }
     
-    func resetQuestionIndex() {
-        currentQuestionIndex = 0
-    }
-    
-    func switchToNextQuestion() {
-        currentQuestionIndex += 1
-    }
-    
-     func yesButtonClicked(_ sender: UIButton) {
-        print("yesButtonClicked called")
-         didAnswer(isYes: true)
-         
-        sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
-        
-    }
-    
-    func noButtonClicked(_ sender: UIButton) {
-        print("noButtonClicked called")
-        didAnswer(isYes: false)
-        
-        sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
-        
-    }
-    
-    private func didAnswer(isYes: Bool) {
-        guard let currentQuestion = currentQuestion else {
+    func didReceiveNextQuestion(question:QuizQuestion?) {
+        guard let question = question else {
             return
         }
         
-        let givenAnswer = isYes
-        
-        viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-    }
-    
-    func didReceiveNextQuestion(question: QuizQuestion?){
-        guard let question = question else { return }
         
         currentQuestion = question
         let viewModel = convert(model: question)
-        
         DispatchQueue.main.async { [weak self] in
             self?.viewController?.show(quiz: viewModel)
         }
     }
-    
-            func showNextQuestionOrResults() {
-                if self.isLastQuestion() {
-                    let text = "Вы ответили на \(correctAnswers) из 10, попробуйте ещё раз!"
-                    
-                    let viewModel = QuizResultsViewModel(
-                        title: "Этот раунд окончен!",
-                        text: text,
-                        buttonText: "Сыграть ещё раз")
-                    viewController?.show(quiz: viewModel)
-                } else {
-                    self.switchToNextQuestion()
-                    questionFactory?.requestNextQuestion()
-                }
+        
+        func convert(model: QuizQuestion) -> QuizStepViewModel {
+            // Конвертация модели вопроса в модель шага квиза
+            print("convert(model:) called with model: \(model)")
+            return QuizStepViewModel(
+                //let questionStep = QuizStepViewModel(
+                image: UIImage(data: model.image) ?? UIImage(),
+                question: model.text,
+                questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)"
+            )
+            //return questionStep
+        }
+        
+        func isLastQuestion() -> Bool {
+            currentQuestionIndex == questionsAmount - 1
+        }
+        
+        func restartGame() {
+            currentQuestionIndex = 0
+            correctAnswers = 0
+            questionFactory?.requestNextQuestion()
+        }
+        
+        func switchToNextQuestion() {
+            currentQuestionIndex += 1
+        }
+        
+        func yesButtonClicked(_ sender: UIButton) {
+            print("yesButtonClicked called")
+            didAnswer(isYes: true)
+            
+            sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
+            
+        }
+        
+        func noButtonClicked(_ sender: UIButton) {
+            print("noButtonClicked called")
+            didAnswer(isYes: false)
+            
+            sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
+            
+        }
+        
+        func didAnswer(isYes: Bool) {
+            guard let currentQuestion = currentQuestion else {
+                return
+            }
+            
+            let givenAnswer = isYes
+            
+            viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+        }
+        
+        
+        
+        func showNextQuestionOrResults() {
+            if self.isLastQuestion() {
+                let text = "Вы ответили на \(correctAnswers) из 10, попробуйте ещё раз!"
+                
+                let viewModel = QuizResultsViewModel(
+                    title: "Этот раунд окончен!",
+                    text: text,
+                    buttonText: "Сыграть ещё раз")
+                viewController?.show(quiz: viewModel)
+            } else {
+                self.switchToNextQuestion()
+                questionFactory?.requestNextQuestion()
             }
         }
+        func didAnswer(isCorrectAnswer: Bool){
+            viewController?.showAnswerResult(isCorrect: true)
+        }
+    }
+    
 
