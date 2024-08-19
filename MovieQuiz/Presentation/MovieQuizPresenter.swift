@@ -10,11 +10,14 @@ import UIKit
 
 final class MovieQuizPresenter: QuestionFactoryDelegate {
     
+    var statisticService: StatisticServiceProtocol!
     var questionFactory: QuestionFactoryProtocol? // Фабрика вопросов
     private weak var viewController: MovieQuizViewController?
     
     init(viewController: MovieQuizViewController) {
         self.viewController = viewController
+        
+        statisticService = StatisticService()
         
         let networkClient = NetworkClient()
         questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: networkClient), delegate: self)
@@ -51,78 +54,128 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
             self?.viewController?.show(quiz: viewModel)
         }
     }
+    
+    func convert(model: QuizQuestion) -> QuizStepViewModel {
+        // Конвертация модели вопроса в модель шага квиза
+        print("convert(model:) called with model: \(model)")
+        return QuizStepViewModel(
+            //let questionStep = QuizStepViewModel(
+            image: UIImage(data: model.image) ?? UIImage(),
+            question: model.text,
+            questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)"
+        )
+        //return questionStep
+    }
+    
+    func isLastQuestion() -> Bool {
+        currentQuestionIndex == questionsAmount - 1
+    }
+    
+    func restartGame() {
+        currentQuestionIndex = 0
+        correctAnswers = 0
+        questionFactory?.requestNextQuestion()
+    }
+    
+    func switchToNextQuestion() {
+        currentQuestionIndex += 1
+    }
+    
+    func yesButtonClicked(_ sender: UIButton) {
+        print("yesButtonClicked called")
+        didAnswer(isYes: true)
         
-        func convert(model: QuizQuestion) -> QuizStepViewModel {
-            // Конвертация модели вопроса в модель шага квиза
-            print("convert(model:) called with model: \(model)")
-            return QuizStepViewModel(
-                //let questionStep = QuizStepViewModel(
-                image: UIImage(data: model.image) ?? UIImage(),
-                question: model.text,
-                questionNumber: "\(currentQuestionIndex + 1)/\(questionsAmount)"
-            )
-            //return questionStep
+        sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
+        
+    }
+    
+    func noButtonClicked(_ sender: UIButton) {
+        print("noButtonClicked called")
+        didAnswer(isYes: false)
+        
+        sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
+        
+    }
+    
+    func didAnswer(isYes: Bool) {
+        guard let currentQuestion = currentQuestion else {
+            return
         }
         
-        func isLastQuestion() -> Bool {
-            currentQuestionIndex == questionsAmount - 1
-        }
+        let givenAnswer = isYes
         
-        func restartGame() {
-            currentQuestionIndex = 0
-            correctAnswers = 0
+        showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
+    }
+    
+    
+    
+    func showNextQuestionOrResults() {
+        if self.isLastQuestion() {
+            let resultMessage = makeResultsMessage()
+            let viewModel = QuizResultsViewModel(
+                title: "Этот раунд окончен!",
+                text: resultMessage,
+                buttonText: "Сыграть ещё раз")
+            viewController?.show(quiz: viewModel)
+        } else {
+            self.switchToNextQuestion()
             questionFactory?.requestNextQuestion()
-        }
-        
-        func switchToNextQuestion() {
-            currentQuestionIndex += 1
-        }
-        
-        func yesButtonClicked(_ sender: UIButton) {
-            print("yesButtonClicked called")
-            didAnswer(isYes: true)
-            
-            sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
-            
-        }
-        
-        func noButtonClicked(_ sender: UIButton) {
-            print("noButtonClicked called")
-            didAnswer(isYes: false)
-            
-            sender.titleLabel?.font = UIFont(name: "YS Display-Medium", size: 20)
-            
-        }
-        
-        func didAnswer(isYes: Bool) {
-            guard let currentQuestion = currentQuestion else {
-                return
-            }
-            
-            let givenAnswer = isYes
-            
-            viewController?.showAnswerResult(isCorrect: givenAnswer == currentQuestion.correctAnswer)
-        }
-        
-        
-        
-        func showNextQuestionOrResults() {
-            if self.isLastQuestion() {
-                let text = "Вы ответили на \(correctAnswers) из 10, попробуйте ещё раз!"
-                
-                let viewModel = QuizResultsViewModel(
-                    title: "Этот раунд окончен!",
-                    text: text,
-                    buttonText: "Сыграть ещё раз")
-                viewController?.show(quiz: viewModel)
-            } else {
-                self.switchToNextQuestion()
-                questionFactory?.requestNextQuestion()
-            }
-        }
-        func didAnswer(isCorrectAnswer: Bool){
-            viewController?.showAnswerResult(isCorrect: true)
         }
     }
     
-
+    func didAnswer(isCorrectAnswer: Bool){
+        showAnswerResult(isCorrect: true)
+    }
+    func makeResultsMessage() -> String {
+        statisticService.store(correct: correctAnswers, total: questionsAmount)
+        let bestGame = statisticService.bestGame
+        let totalPlaysCountLine = "Количество сыгранных квизов: \(statisticService.gamesCount)"
+        let currentGameResultLine = "Ваш результат: \(correctAnswers)\\\(questionsAmount)"
+        let bestGameInfoLine = "Рекорд: \(bestGame.correct)\\\(bestGame.total)"
+        + " (\(bestGame.date.dateTimeString))"
+        let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
+        
+        let resultMessage = [
+            currentGameResultLine, totalPlaysCountLine, bestGameInfoLine, averageAccuracyLine
+        ].joined(separator: "\n")
+        
+        return resultMessage
+    }
+    
+    func showAnswerResult(isCorrect: Bool) {
+        
+        print("showAnswerResult called with isCorrect: \(isCorrect)")
+        if isCorrect {
+            correctAnswers += 1
+        }
+        
+        viewController?.highlightImageBorder(isCorrectAnswer: isCorrect)
+        /*let answerText = isCorrect ? "ДА" : "НЕТ" */
+        
+        //Задержка перед показом следующего вопроса или результатов
+        /*DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+         guard let strongSelf = self else { return }
+         strongSelf.showNextQuestionOrResults()
+         
+         self?.changeStateButton(true)*/
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            guard let self = self else { return }
+            self.viewController?.imageView.layer.borderColor = UIColor.clear.cgColor
+            self.correctAnswers = self.correctAnswers
+            //self.presenter.questionFactory = self.questionFactory
+            self.showNextQuestionOrResults()
+        }
+        
+    }
+    
+    func showAlert(model: AlertModel) {
+        let alert = UIAlertController(title: model.title, message: model.message, preferredStyle: .alert)
+                let action = UIAlertAction(title: model.buttonText, style: .default) { _ in
+                    
+                }
+                alert.addAction(action)
+                viewController?.present(alert, animated: true, completion: nil)
+        
+    }
+}
