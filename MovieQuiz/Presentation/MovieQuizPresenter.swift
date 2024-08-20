@@ -47,6 +47,8 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     func didLoadDataFromServer() {
         viewController?.hideLoadingIndicator()
         questionFactory?.requestNextQuestion()
+        
+        
     }
     
     func didFailToLoadData(with error: Error) {
@@ -70,6 +72,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     func convert(model: QuizQuestion) -> QuizStepViewModel {
         // Конвертация модели вопроса в модель шага квиза
         print("convert(model:) called with model: \(model)")
+        
         return QuizStepViewModel(
             //let questionStep = QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
