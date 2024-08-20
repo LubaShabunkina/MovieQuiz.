@@ -1,7 +1,9 @@
 import UIKit
 // Основной контроллер приложения
 
-final class MovieQuizViewController: UIViewController {
+
+
+final class MovieQuizViewController: UIViewController, MovieQuizViewControllerProtocol {
     
     
     
@@ -25,7 +27,7 @@ final class MovieQuizViewController: UIViewController {
     
     //MARK: - IBOutlet
     
-    @IBOutlet  private var imageView: UIImageView!
+    @IBOutlet   var imageView: UIImageView!
     @IBOutlet private var counterLabel: UILabel!
     @IBOutlet private var textLabel: UILabel!
     
@@ -92,8 +94,7 @@ final class MovieQuizViewController: UIViewController {
         //Запрос следующего вопроса
         imageView.layer.borderColor = UIColor.clear.cgColor
         presenter.currentQuestionIndex += 1
-        self.presenter.questionFactory?.requestNextQuestion()
-        print("requestNextQuestion called")
+       
     }
     
     
@@ -314,6 +315,9 @@ final class MovieQuizViewController: UIViewController {
         imageView.layer.borderWidth = 8
         imageView.layer.borderColor = isCorrectAnswer ? UIColor.ypGreen.cgColor: UIColor.ypRed.cgColor
     }
+    func resetImageViewBorder() {
+        imageView.layer.borderColor = UIColor.clear.cgColor
+    }
     
     /* let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
      guard let strongSelf = self else { return }
@@ -358,6 +362,10 @@ final class MovieQuizViewController: UIViewController {
             self.alertPresenter?.showAlert(model: model)
         }
         
+        func resetImageViewBorder() {
+            imageView.layer.borderColor = UIColor.clear.cgColor
+        }
+
         // Передаём замыкание в `AlertModel`
         let alertModel = AlertModel(
             title: model.title,

@@ -8,13 +8,25 @@
 import Foundation
 import UIKit
 
+protocol MovieQuizViewControllerProtocol: AnyObject {
+    func show(quiz step: QuizStepViewModel)
+    func show(quiz result: QuizResultsViewModel)
+    func highlightImageBorder(isCorrectAnswer: Bool)
+    func resetImageViewBorder()
+    func showLoadingIndicator()
+    func hideLoadingIndicator()
+    func showNetworkError(message: String)
+    //func showAlert(model: AlertModel)
+    func present(_ viewControllerToPresent: UIViewController, animated flag: Bool, completion: (() -> Void)?)
+}
+
 final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     var statisticService: StatisticServiceProtocol!
     var questionFactory: QuestionFactoryProtocol? // Фабрика вопросов
-    private weak var viewController: MovieQuizViewController?
+    private weak var viewController: MovieQuizViewControllerProtocol?
     
-    init(viewController: MovieQuizViewController) {
+    init(viewController: MovieQuizViewControllerProtocol) {
         self.viewController = viewController
         
         statisticService = StatisticService()
@@ -42,7 +54,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         viewController?.showNetworkError(message: message)
     }
     
-    func didReceiveNextQuestion(question:QuizQuestion?) {
+    func didReceiveNextQuestion(question: QuizQuestion?) {
         guard let question = question else {
             return
         }
@@ -111,11 +123,13 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     func showNextQuestionOrResults() {
         if self.isLastQuestion() {
+            statisticService.store(correct: correctAnswers, total: questionsAmount)
             let resultMessage = makeResultsMessage()
             let viewModel = QuizResultsViewModel(
                 title: "Этот раунд окончен!",
                 text: resultMessage,
-                buttonText: "Сыграть ещё раз")
+                buttonText: "Сыграть ещё раз"
+            )
             viewController?.show(quiz: viewModel)
         } else {
             self.switchToNextQuestion()
@@ -131,8 +145,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         let bestGame = statisticService.bestGame
         let totalPlaysCountLine = "Количество сыгранных квизов: \(statisticService.gamesCount)"
         let currentGameResultLine = "Ваш результат: \(correctAnswers)\\\(questionsAmount)"
-        let bestGameInfoLine = "Рекорд: \(bestGame.correct)\\\(bestGame.total)"
-        + " (\(bestGame.date.dateTimeString))"
+        let bestGameInfoLine = "Рекорд: \(bestGame.correct)\\\(bestGame.total)" + " (\(bestGame.date.dateTimeString))"
         let averageAccuracyLine = "Средняя точность: \(String(format: "%.2f", statisticService.totalAccuracy))%"
         
         let resultMessage = [
@@ -141,6 +154,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         
         return resultMessage
     }
+
     
     func showAnswerResult(isCorrect: Bool) {
         
@@ -161,8 +175,8 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             guard let self = self else { return }
-            self.viewController?.imageView.layer.borderColor = UIColor.clear.cgColor
-            self.correctAnswers = self.correctAnswers
+            self.viewController?.resetImageViewBorder()
+            //self.correctAnswers = self.correctAnswers
             //self.presenter.questionFactory = self.questionFactory
             self.showNextQuestionOrResults()
         }
@@ -175,7 +189,12 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
                     
                 }
                 alert.addAction(action)
-                viewController?.present(alert, animated: true, completion: nil)
+        viewController?.present(alert, animated: true, completion: nil)
         
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+            self?.viewController?.resetImageViewBorder()
+            self?.showNextQuestionOrResults()
+        }
+
     }
 }
