@@ -6,6 +6,12 @@
 //
 
 import Foundation
+
+protocol MovieQuizNetworkRouting {
+    func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void)
+}
+
+
 /// Отвечает за загрузку данных по URL
 struct NetworkClient: NetworkRouting {
     
@@ -13,10 +19,7 @@ struct NetworkClient: NetworkRouting {
         case codeError
     }
     
-    protocol NetworkRouting {
-        func fetch(url: URL, handler: @escaping (Result<Data, Error>) -> Void)
-    }
-
+   
   
     
     func fetch(url: URL, completion handler: @escaping (Result<Data, Error>) -> Void) {

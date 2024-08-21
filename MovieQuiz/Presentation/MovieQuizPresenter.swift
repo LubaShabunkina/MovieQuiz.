@@ -73,6 +73,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         // Конвертация модели вопроса в модель шага квиза
         print("convert(model:) called with model: \(model)")
         
+       
         return QuizStepViewModel(
             //let questionStep = QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
