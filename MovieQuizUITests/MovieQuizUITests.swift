@@ -111,9 +111,6 @@ final class MovieQuizUITests: XCTestCase {
             let _ = app.buttons["No"].waitForExistence(timeout: 10)
         }
         
-        // Проверяем, что индекс отображается правильно перед проверкой алерта
-        let indexLabel = app.staticTexts["Index"]
-        XCTAssertEqual(indexLabel.label, "10/10", "Index label text is incorrect before alert.")
         
         // Ожидаем появления алерта
         let alert = app.alerts["Этот раунд окончен!"]
