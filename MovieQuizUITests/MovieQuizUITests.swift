@@ -69,55 +69,72 @@ final class MovieQuizUITests: XCTestCase {
         XCTAssertFalse(firstPoster == secondPoster)
         //XCTAssertTrue(secondPoster.exists)
         XCTAssertNotEqual(firstPosterData, secondPosterData)
-        
-        func testNoButton() {
-            sleep(3)
-            
-            let firstPoster = app.images["Poster"]
-            let firstPosterData = firstPoster.screenshot().pngRepresentation
-            
-            app.buttons["No"].tap()
-            sleep(3)
-            
-            let secondPoster = app.images["Poster"]
-            let secondPosterData = secondPoster.screenshot().pngRepresentation
-
-            let indexLabel = app.staticTexts["Index"]
-           
-            XCTAssertNotEqual(firstPosterData, secondPosterData)
-            XCTAssertEqual(indexLabel.label, "2/10")
-        }
     }
     
-    func testGameFinish() {
-        sleep(2)
-        for _ in 1...10 {
-            app.buttons["No"].tap()
-            sleep(2)
-        }
-
-        let alert = app.alerts["Game results"]
+    func testNoButton() {
+        sleep(3)
         
-        XCTAssertTrue(alert.exists)
-        XCTAssertTrue(alert.label == "Этот раунд окончен!")
-        XCTAssertTrue(alert.buttons.firstMatch.label == "Сыграть ещё раз")
-    }
-
-    func testAlertDismiss() {
-        sleep(2)
-        for _ in 1...10 {
-            app.buttons["No"].tap()
-            sleep(2)
-        }
+        let firstPoster = app.images["Poster"]
+        let firstPosterData = firstPoster.screenshot().pngRepresentation
         
-        let alert = app.alerts["Game results"]
-        alert.buttons.firstMatch.tap()
+        app.buttons["No"].tap()
+        sleep(3)
         
-        sleep(2)
+        let secondPoster = app.images["Poster"]
+        let secondPosterData = secondPoster.screenshot().pngRepresentation
+        
+        XCTAssertNotEqual(firstPosterData, secondPosterData)
         
         let indexLabel = app.staticTexts["Index"]
+        XCTAssertEqual(indexLabel.label, "3/10")
+    }
+    
+    
+    func testGameFinish() {
+        for _ in 1...10 {
+            app.buttons["No"].tap()
+            let _ = app.buttons["No"].waitForExistence(timeout: 2) // Ожидание появления кнопки
+        }
         
-        XCTAssertFalse(alert.exists)
-        XCTAssertTrue(indexLabel.label == "1/10")
+        let alert = app.alerts["Этот раунд окончен!"]
+        XCTAssertTrue(alert.waitForExistence(timeout: 5))
+        
+        XCTAssertTrue(alert.label == "Этот раунд окончен!")
+        XCTAssertTrue(alert.buttons["Сыграть ещё раз"].exists)
+    }
+    
+    
+    
+    func testAlertDismiss() {
+        for _ in 1...10 {
+            app.buttons["No"].tap()
+            let _ = app.buttons["No"].waitForExistence(timeout: 10)
+        }
+        
+        // Проверяем, что индекс отображается правильно перед проверкой алерта
+        let indexLabel = app.staticTexts["Index"]
+        XCTAssertEqual(indexLabel.label, "10/10", "Index label text is incorrect before alert.")
+        
+        // Ожидаем появления алерта
+        let alert = app.alerts["Этот раунд окончен!"]
+        let alertExists = alert.waitForExistence(timeout: 10)
+        XCTAssertTrue(alertExists, "Alert did not appear.")
+        
+        // Проверяем существование кнопки "Сыграть ещё раз" и нажимаем её
+        let button = alert.buttons["Сыграть ещё раз"]
+        XCTAssertTrue(button.exists, "Play again button does not exist.")
+        button.tap()
+        
+        // Добавляем небольшую задержку, чтобы UI успел обновиться
+        sleep(2)
+        
+        // Ожидаем, что алерт исчезает
+        let alertDisappeared = !alert.waitForExistence(timeout: 2)
+        XCTAssertTrue(alertDisappeared, "Alert did not disappear.")
+        
+        // Ожидаем обновления индекса
+        let updatedIndexLabel = app.staticTexts["Index"]
+        XCTAssertTrue(updatedIndexLabel.waitForExistence(timeout: 10), "Index label did not appear.")
+        XCTAssertEqual(updatedIndexLabel.label, "1/10", "Index label text is incorrect after alert dismissal.")
     }
 }

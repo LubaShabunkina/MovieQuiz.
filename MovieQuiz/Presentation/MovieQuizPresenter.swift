@@ -9,6 +9,7 @@ import Foundation
 import UIKit
 
 protocol MovieQuizViewControllerProtocol: AnyObject {
+    
     func show(quiz step: QuizStepViewModel)
     func show(quiz result: QuizResultsViewModel)
     func highlightImageBorder(isCorrectAnswer: Bool)
@@ -25,15 +26,18 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     var statisticService: StatisticServiceProtocol!
     var questionFactory: QuestionFactoryProtocol? // Фабрика вопросов
     private weak var viewController: MovieQuizViewControllerProtocol?
+    private let networkClient: NetworkClientProtocol
     
-    init(viewController: MovieQuizViewControllerProtocol) {
+    init(viewController: MovieQuizViewControllerProtocol, networkClient: NetworkClientProtocol) {
         self.viewController = viewController
-        
+        self.networkClient = networkClient
         statisticService = StatisticService()
         
-        let networkClient = NetworkClient()
-        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: networkClient), delegate: self)
-        questionFactory?.loadData()
+        let moviesLoader = MoviesLoader(networkClient: networkClient)
+        self.questionFactory = QuestionFactory(moviesLoader: moviesLoader, delegate: self)
+        /*let networkClient = NetworkClient()
+        questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: networkClient), delegate: self)*/
+        self.questionFactory?.loadData()
         viewController.showLoadingIndicator()
     }
     
@@ -73,7 +77,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         // Конвертация модели вопроса в модель шага квиза
         print("convert(model:) called with model: \(model)")
         
-       
+        
         return QuizStepViewModel(
             //let questionStep = QuizStepViewModel(
             image: UIImage(data: model.image) ?? UIImage(),
@@ -158,7 +162,7 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
         
         return resultMessage
     }
-
+    
     
     func showAnswerResult(isCorrect: Bool) {
         
@@ -189,16 +193,47 @@ final class MovieQuizPresenter: QuestionFactoryDelegate {
     
     func showAlert(model: AlertModel) {
         let alert = UIAlertController(title: model.title, message: model.message, preferredStyle: .alert)
-                let action = UIAlertAction(title: model.buttonText, style: .default) { _ in
-                    
-                }
-                alert.addAction(action)
-        viewController?.present(alert, animated: true, completion: nil)
-        
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-            self?.viewController?.resetImageViewBorder()
-            self?.showNextQuestionOrResults()
-        }
+        alert.view.accessibilityIdentifier = model.alertAccessibilityIdentifier
 
+        let action = UIAlertAction(title: model.buttonText, style: .default) { _ in
+            model.completion?()
+        }
+        action.accessibilityIdentifier = model.buttonAccessibilityIdentifier
+        alert.addAction(action)
+        
+        // Убедитесь, что viewController корректный
+        viewController?.present(alert, animated: true, completion: nil)
     }
-}
+
+    
+    private func sendFirstRequest() {
+        guard let url = URL(string: "https://tv-api.com/en/API/MostPopularTVs/k_zcuw1ytf") else { return }
+        
+        networkClient.fetch(url: url) { result in
+            switch result {
+            case .success(let data):
+                // Обработка данных
+                print("Data received: \(data)")
+            case .failure(let error):
+                // Обработка ошибки
+                print("Error occurred: \(error.localizedDescription)")
+            }
+        }
+    }
+        
+         func resetGame() {
+            //Cброс состояния игры
+            print("resetGame called")
+            currentQuestionIndex = 0
+            correctAnswers = 0
+            viewController?.resetImageViewBorder()
+            questionFactory?.requestNextQuestion()
+            // imageView.layer.borderColor = UIColor.clear.cgColor
+           // configureImageView()
+            
+            
+        }
+        
+    }
+    
+

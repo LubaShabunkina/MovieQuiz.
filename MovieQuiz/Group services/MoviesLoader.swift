@@ -7,6 +7,8 @@
 
 import Foundation
 
+
+
 protocol MoviesLoading {
     func loadMovies(completion: @escaping (Result<MostPopularMovies, Error>) -> Void)
 }
@@ -49,42 +51,24 @@ final class MoviesLoader: MoviesLoading {
             }
         }
         task.resume()
-            
-            
-            /*networkClient.fetch(url: mostPopularMoviesUrl) { result in
-             switch result {
-             case .success(let data):
-             do {
-             let mostPopularMovies = try JSONDecoder().decode(MostPopularMovies.self, from: data)
-             handler(.success(mostPopularMovies))
-             } catch {
-             handler(.failure(error))
-             }
-             case .failure(let error))
-             }
-             }
-             
-             
-             
-             
-             
-             struct MoviesLoader: MoviesLoading {
-             
-             // MARK: - NetworkClient
-             private let networkClient = NetworkClient()
-             
-             // MARK: - URL
-             private var mostPopularMoviesUrl: URL {
-             // Если мы не смогли преобразовать строку в URL, то приложение упадёт с ошибкой
-             
-             
-             func loadMovies(handler: @escaping (Result<MostPopularMovies, Error>) -> Void) {
-             
-             }
-             }
-             }
-             }*/
-        }
         
+        
+        networkClient.fetch(url: url) { result in
+            switch result {
+            case .success(let data):
+                do {
+                    let mostPopularMovies = try JSONDecoder().decode(MostPopularMovies.self, from: data)
+                    completion(.success(mostPopularMovies))
+                                    } catch {
+                                        completion(.failure(error))
+                                    }
+                                case .failure(let error):
+                                    completion(.failure(error))
+            }
+        }
     }
-
+}
+             
+             
+             
+             

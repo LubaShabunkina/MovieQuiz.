@@ -9,31 +9,18 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
     
     //MARK: - Свойства
     
-    //private let questionsAmount: Int = 10 // Общее количество вопросов
-    
-    //var questionFactory: QuestionFactoryProtocol? // Фабрика вопросов
-    
-    //private var currentQuestion: QuizQuestion? //Текущий вопрос
-    
-    //private var currentQuestionIndex: Int = 0 // Индекс текущего вопроса
-    
-    //private var correctAnswers: Int = 0 // Количество правильных ответов
-    
     private var alertPresenter: AlertPresenter? // Презентер для отображения алертов
     
-    //private var statisticService: StatisticServiceProtocol!
-    
     private var presenter: MovieQuizPresenter!
+    private var networkClient: NetworkClientProtocol!
     
     //MARK: - IBOutlet
     
     @IBOutlet   var imageView: UIImageView!
     @IBOutlet private var counterLabel: UILabel!
     @IBOutlet private var textLabel: UILabel!
-    
     @IBOutlet private var noButton: UIButton!
     @IBOutlet private var yesButton: UIButton!
-    
     @IBOutlet private var activityIndicator: UIActivityIndicatorView!
     
     // MARK: - Lifecycle
@@ -42,38 +29,31 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         super.viewDidLoad()
         print("viewDidLoad called")
         
-        //let statisticService = StatisticService()
-        //self.presenter.statisticService = statisticService
-        
-        presenter = MovieQuizPresenter(viewController: self)
+        imageView.accessibilityIdentifier = "Poster"
+        counterLabel.accessibilityIdentifier = "Index"
+        yesButton.accessibilityIdentifier = "Yes"
+        noButton.accessibilityIdentifier = "No"
         
         let networkClient = NetworkClient()
-        _ = MoviesLoader(networkClient: networkClient)
-        //var questionFactory = QuestionFactory(moviesLoader: moviesLoader, delegate: self)
-        //self.questionFactory = questionFactory
-        // let questionFactory = QuestionFactory(moviesLoader: MoviesLoader(networkClient: NetworkRouting.self as! NetworkRouting), delegate: self)
-        //questionFactory.delegate = self
+        presenter = MovieQuizPresenter(viewController: self, networkClient: networkClient)
         
-        // Создание презентера алертов
+       
+        _ = MoviesLoader(networkClient: networkClient)
+        
         self.alertPresenter = AlertPresenter(viewController: self)
         
         // Запрос следующего вопроса
         self.presenter.questionFactory?.requestNextQuestion()
         print("requestNextQuestion called")
         
-        sendFirstRequest()
+        //sendFirstRequest()
         showLoadingIndicator()
         presenter.questionFactory?.loadData()
-        
-        
         
         // Настройка внешнего вида элементов интерфейса
         
         imageView.layer.cornerRadius = 20
         imageView.layer.masksToBounds = true
-        
-        //currentQuestionIndex = 0
-        //correctAnswers = 0
         
         textLabel.font = UIFont(name: "YSDisplay-Medium", size: 23)
         counterLabel.font = UIFont(name: "YSDisplay-Bold", size: 20)
@@ -86,21 +66,24 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
             buttonText: "Сыграть ещё раз",
             completion: { [weak self] in
                 self?.resetGame()
-            }
+            },
+            alertAccessibilityIdentifier: "Game results",
+            buttonAccessibilityIdentifier: "Play again"
         )
         
         alertPresenter?.showAlert(model: alertModel)
         
+        
         //Запрос следующего вопроса
         imageView.layer.borderColor = UIColor.clear.cgColor
         presenter.currentQuestionIndex += 1
-       
+        
     }
     
     
     //MARK: Networking
     
-    func sendFirstRequest() {
+   /* func sendFirstRequest() {
         // создаём адрес
         guard let url = URL(string: "https://tv-api.com/en/API/MostPopularTVs/k_zcuw1ytf") else { return }
         // создаём запрос
@@ -111,7 +94,7 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         }
         // Отправляем запрос
         task.resume()
-    }
+    }*/
     // MARK: - QuestionFactoryDelegate
     
     /* func didReceiveNextQuestion(question: QuizQuestion?){
@@ -245,44 +228,26 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
      }
      }*/
     
-    func show(quiz result: QuizResultsViewModel) { //Он отвечает за отображение алерта с результатами квиза после прохождения всех вопросов
-        
+    func show(quiz result: QuizResultsViewModel) {
         print("show(quiz result:) called with result: \(result)")
         
-        let alert = UIAlertController(
-            title: result.title,
-            message: result.text,
-            preferredStyle: .alert)
-        
-        let action = UIAlertAction(title: result.buttonText, style: .default) { [weak self] _ in
-            guard let self = self else { return }
-            
-            self.presenter.restartGame()
-        }
-        
-        alert.addAction(action)
-        
-        self.present(alert, animated: true, completion: nil)
         let alertModel = AlertModel(
             title: result.title,
             message: result.text,
-            buttonText: result.buttonText
-        ) { [weak self] in
-            self?.resetGame()
-        }
+            buttonText: result.buttonText,
+            completion: { [weak self] in
+                self?.resetGame()
+            },
+            alertAccessibilityIdentifier: "Game results",
+            buttonAccessibilityIdentifier: "Play again"
+        )
+        
         alertPresenter?.showAlert(model: alertModel)
     }
+    
+    
     private func resetGame() {
-        //Cброс состояния игры
-        print("resetGame called")
-        presenter.currentQuestionIndex = 0
-        presenter.correctAnswers = 0
-        
-        imageView.layer.borderColor = UIColor.clear.cgColor
-        configureImageView()
-        
-        // Запрос следующего вопроса
-        presenter.questionFactory?.requestNextQuestion()
+        presenter.restartGame()
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -343,38 +308,48 @@ final class MovieQuizViewController: UIViewController, MovieQuizViewControllerPr
         hideLoadingIndicator()
         
         // Создаём модель алерта
-        let model = AlertModel(
+        let alertModel = AlertModel(
             title: "Ошибка",
             message: message,
-            buttonText: "Попробовать ещё раз", 
-            completion: nil
-        )
-        
-    
-        let completion: () -> Void = { [weak self] in
-            guard let self = self else { return }
-            
-            self.presenter.currentQuestionIndex = 0
-            self.presenter.correctAnswers = 0
-            self.presenter.questionFactory?.requestNextQuestion()
-            
-            // Можно также переиспользовать `model`, если требуется
-            self.alertPresenter?.showAlert(model: model)
-        }
-        
-        func resetImageViewBorder() {
-            imageView.layer.borderColor = UIColor.clear.cgColor
-        }
-
-        // Передаём замыкание в `AlertModel`
-        let alertModel = AlertModel(
-            title: model.title,
-            message: model.message,
-            buttonText: model.buttonText,
-            completion: completion
+            buttonText: "Попробовать ещё раз",
+            completion: { [weak self] in
+                guard let self = self else { return }
+                self.presenter.currentQuestionIndex = 0
+                self.presenter.correctAnswers = 0
+                self.presenter.questionFactory?.requestNextQuestion()
+            },
+            alertAccessibilityIdentifier: "Network Error",
+            buttonAccessibilityIdentifier: "Retry"
         )
         
         alertPresenter?.showAlert(model: alertModel)
     }
+    
+    
+    /*  let completion: () -> Void = { [weak self] in
+     guard let self = self else { return }
+     
+     self.presenter.currentQuestionIndex = 0
+     self.presenter.correctAnswers = 0
+     self.presenter.questionFactory?.requestNextQuestion()
+     
+     // Можно также переиспользовать `model`, если требуется
+     self.alertPresenter?.showAlert(model: model)
+     }
+     
+     func resetImageViewBorder() {
+     imageView.layer.borderColor = UIColor.clear.cgColor
+     }
+     
+     // Передаём замыкание в `AlertModel`
+     let alertModel = AlertModel(
+     title: model.title,
+     message: model.message,
+     buttonText: model.buttonText,
+     completion: completion
+     )
+     
+     alertPresenter?.showAlert(model: alertModel)
+     }*/
     
 }
